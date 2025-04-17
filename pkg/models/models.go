@@ -8,43 +8,43 @@ import (
 var ErrNoRecord = errors.New("models: object not found")
 
 type Snippet struct {
-	ID int
-	Title string
+	ID      int
+	Title   string
 	Content string
 	Created time.Time
 	Expires time.Time
 }
 
 type Transaction struct {
-	ID int
-	Amount float32
-	Time time.Time
-	User User
+	ID       int
+	Amount   float32
+	Time     time.Time
+	User     User
 	Category Category
-	Account Account
+	Account  Account
 }
 
 type User struct {
-	ID int
-	name string
-	surname string
-	login string
+	ID       int
+	name     string
+	surname  string
+	login    string
 	password string
 }
 
 type Category struct {
-	ID int
+	ID   int
 	name string
 }
 
 type Account struct {
-	ID int
-	name string
-	balance float32
+	ID      int
+	Name    string
+	Balance float32
 }
 
 type Plan struct {
-	ID int
-	name string
+	ID     int
+	name   string
 	amount float32
 }
