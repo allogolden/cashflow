@@ -11,6 +11,7 @@ import (
 	"golangs.org/snippetbox/pkg/models/mysql"
 
 	_ "github.com/go-sql-driver/mysql"
+	_ "github.com/lib/pq"
 )
 
 type application struct {
@@ -22,13 +23,13 @@ type application struct {
 
 func main() {
 	addr := flag.String("addr", ":4000", "Сетевой адрес веб-сервера")
-	dsn := flag.String("dsn", "web:pass@/snippetbox?parseTime=true", "MYSQL data source name")
+	connStr := "user=akhadimetov dbname=mydb sslmode=disable"
 	flag.Parse()
 
 	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
 	errorLog := log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
 
-	db, err := openDB(*dsn)
+	db, err := sql.Open("postgres", connStr)
 	if err != nil {
 		errorLog.Fatal(err)
 	}
