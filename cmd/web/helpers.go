@@ -2,7 +2,9 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net/http"
+	"runtime"
 	"runtime/debug"
 )
 
@@ -32,4 +34,20 @@ func (app *application) render(w http.ResponseWriter, r *http.Request, name stri
 	if err != nil {
 		app.serverError(w, err)
 	}
+}
+
+func recoverMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		defer func() {
+			if rec := recover(); rec != nil {
+				// Снимем стек
+				buf := make([]byte, 1<<16)
+				n := runtime.Stack(buf, false)
+				log.Printf("Panic recovered: %v\n%s", rec, buf[:n])
+				http.Error(w, http.StatusText(http.StatusInternalServerError),
+					http.StatusInternalServerError)
+			}
+		}()
+		next.ServeHTTP(w, r)
+	})
 }

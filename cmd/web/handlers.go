@@ -3,10 +3,12 @@ package main
 import (
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 
 	"golangs.org/snippetbox/pkg/models"
+	"golangs.org/snippetbox/pkg/models/postgres"
 )
 
 // Обработчик главной странице.
@@ -71,5 +73,40 @@ func (app *application) createSnippet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	http.Redirect(w, r, fmt.Sprintf("/snippet?id=%d", id), http.StatusSeeOther)
+
+}
+
+func (app *application) createUser(w http.ResponseWriter, r *http.Request) {
+	if app.users == nil {
+		log.Println("ERROR: app.models.User is nil!")
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+	if app.users.DB == nil {
+		log.Println("ERROR: app.models.User.DB is nil!")
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+	if r.Method != http.MethodPost {
+		w.Header().Set("Allow", http.MethodPost)
+
+		app.clientError(w, http.StatusMethodNotAllowed)
+	}
+	login := r.FormValue("login")
+	password := r.FormValue("password")
+	name := r.FormValue("name")
+	surname := r.FormValue("surname")
+
+	_, err := app.users.CreateUser(login, password, name, surname)
+
+	if err != nil {
+		switch err {
+		case postgres.ErrDuplicateLogin:
+			http.Error(w, err.Error(), http.StatusConflict)
+		default:
+			app.serverError(w, err)
+		}
+		return
+	}
 
 }

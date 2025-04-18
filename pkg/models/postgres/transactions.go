@@ -12,7 +12,7 @@ type TransactionModel struct {
 	DB *sql.DB
 }
 
-func (m TransactionModel) CreateTransaction(amount float32, time time.Time, user UserModel, category CategoryModel, account AccountModel) (int, error) {
+func (m TransactionModel) CreateTransaction(amount float32, time time.Time, user int, category int, account int) (int, error) {
 	stmt := `INSERT INTO transactions (amount, time, user, category, account) VALUES (?, UTC_TIMESTAMP(), ?, ?, ?)`
 
 	result, err := m.DB.Exec(stmt, amount, time, user, category, account)
@@ -46,11 +46,11 @@ func (m *TransactionModel) GetTransaction(id int) (*models.Transaction, error) {
 	return s, nil
 }
 
-func (m *TransactionModel) Latest(user UserModel) ([]*models.Transaction, error) {
+func (m *TransactionModel) Latest(user int) ([]*models.Transaction, error) {
 	stmt := `SELECT id, title, content, created, expires FROM snippets
 	WHERE user = ? ORDER BY created DESC LIMIT 10`
 
-	rows, err := m.DB.Query(stmt)
+	rows, err := m.DB.Query(stmt, user)
 	if err != nil {
 		return nil, err
 	}

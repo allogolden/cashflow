@@ -34,7 +34,7 @@ type User struct {
 
 type Category struct {
 	ID   int
-	name string
+	Name string
 }
 
 type Account struct {

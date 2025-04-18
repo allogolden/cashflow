@@ -44,3 +44,32 @@ func (m *AccountModel) GetAccount(id int) (*models.Account, error) {
 	}
 	return s, nil
 }
+
+func (m *AccountModel) GetUserAcccounts(user int) ([]*models.Account, error) {
+	stmt := `SELECT id, name, balance FROM accounts
+	WHERE user = ? ORDER BY created DESC LIMIT 10`
+
+	rows, err := m.DB.Query(stmt, user)
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	var accounts []*models.Account
+
+	for rows.Next() {
+		s := &models.Account{}
+		err = rows.Scan(&s.ID, &s.Name, &s.Balance)
+		if err != nil {
+			return nil, err
+		}
+
+		accounts = append(accounts, s)
+	}
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return accounts, nil
+}

@@ -3,27 +3,29 @@ package main
 import (
 	"database/sql"
 	"flag"
+	"html/template"
 	"log"
 	"net/http"
 	"os"
-	"html/template"
-	
+
 	"golangs.org/snippetbox/pkg/models/mysql"
+	"golangs.org/snippetbox/pkg/models/postgres"
 
 	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/lib/pq"
 )
 
 type application struct {
-	errorLog *log.Logger
-	infoLog  *log.Logger
-	snippets *mysql.SnippetModel
+	errorLog      *log.Logger
+	infoLog       *log.Logger
+	snippets      *mysql.SnippetModel
+	users         *postgres.UserModel
 	templateCache map[string]*template.Template
 }
 
 func main() {
 	addr := flag.String("addr", ":4000", "Сетевой адрес веб-сервера")
-	connStr := "user=akhadimetov dbname=mydb sslmode=disable"
+	connStr := "postgres://app_user:app_user.@localhost:5432/mydb?sslmode=disable"
 	flag.Parse()
 
 	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
@@ -31,7 +33,11 @@ func main() {
 
 	db, err := sql.Open("postgres", connStr)
 	if err != nil {
-		errorLog.Fatal(err)
+		log.Fatalf("cannot open DB: %v", err)
+	}
+	// Обязательно проверим живое соединение
+	if err := db.Ping(); err != nil {
+		log.Fatalf("cannot ping DB: %v", err)
 	}
 
 	defer db.Close()
@@ -42,12 +48,12 @@ func main() {
 	}
 
 	app := &application{
-		errorLog: errorLog,
-		infoLog:  infoLog,
-		snippets: &mysql.SnippetModel{DB: db},
+		errorLog:      errorLog,
+		infoLog:       infoLog,
+		snippets:      &mysql.SnippetModel{DB: db},
+		users:         &postgres.UserModel{DB: db},
 		templateCache: templateCache,
 	}
-
 
 	srv := &http.Server{
 		Addr:     *addr,

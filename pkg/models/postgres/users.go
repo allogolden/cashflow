@@ -2,6 +2,13 @@ package postgres
 
 import (
 	"database/sql"
+	"errors"
+	"github.com/lib/pq"
+)
+
+var ErrInvalidCredentials = errors.New("invalid login or password")
+var (
+    ErrDuplicateLogin = errors.New("user with this login already exists")
 )
 
 type UserModel struct {
@@ -9,17 +16,36 @@ type UserModel struct {
 }
 
 func (m UserModel) CreateUser(login string, password string, name string, surname string) (int, error) {
-	stmt := `INSERT INTO users (login, password, name, surname) VALUES (?, ?, ?, ?)`
+	stmt := `INSERT INTO users (login, password, name, surname) VALUES ($1, $2, $3, $4) RETURNING id`
 
-	result, err := m.DB.Exec(stmt, login, password, name, surname)
+	var id int
+	// запускаем QueryRow и сканируем возвращённый id
+	err := m.DB.QueryRow(stmt, login, password, name, surname).Scan(&id)
+	if err != nil {
+        // ловим pq‑ошибку
+        if pgErr, ok := err.(*pq.Error); ok {
+            // 23505 — duplicate key violation
+            if pgErr.Code == "23505" && pgErr.Constraint == "users_login_key" {
+                return 0, ErrDuplicateLogin
+            }
+        }
+        return 0, err
+    }
+
+	return id, nil
+}
+
+func (m UserModel) Login(login string, password string) error {
+	stmt := `SELECT password FROM users WHERE login = ?`
+	var passDB string
+	err := m.DB.QueryRow(stmt, login).Scan(&passDB)
 
 	if err != nil {
-		return 0, err
+		return ErrInvalidCredentials
+	}
+	if passDB != password {
+		return ErrInvalidCredentials
 	}
 
-	id, err := result.LastInsertId()
-	if err != nil {
-		return 0, err
-	}
-	return int(id), nil
+	return nil
 }
