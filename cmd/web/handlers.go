@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
@@ -109,4 +110,46 @@ func (app *application) createUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+}
+
+func (app *application) login(w http.ResponseWriter, r *http.Request) {
+	if app.users == nil {
+		log.Println("ERROR: app.models.User is nil!")
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+	if app.users.DB == nil {
+		log.Println("ERROR: app.models.User.DB is nil!")
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+	if r.Method != http.MethodPost {
+		w.Header().Set("Allow", http.MethodPost)
+
+		app.clientError(w, http.StatusMethodNotAllowed)
+	}
+
+	login := r.FormValue("login")
+	password := r.FormValue("password")
+	fmt.Println(login, password)
+
+	err, id := app.users.Login(login, password)
+
+	if err != nil {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusNotFound)
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"status":  "404",
+			"message": "Invalid credentials",
+		})
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"status":  "ok",
+		"message": "Login successful",
+		"user_id": id, // если вы из Login возвращаете id
+	})
 }
