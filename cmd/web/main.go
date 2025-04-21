@@ -20,6 +20,7 @@ type application struct {
 	infoLog       *log.Logger
 	snippets      *mysql.SnippetModel
 	users         *postgres.UserModel
+	accounts      *postgres.AccountModel
 	templateCache map[string]*template.Template
 }
 
@@ -52,6 +53,7 @@ func main() {
 		infoLog:       infoLog,
 		snippets:      &mysql.SnippetModel{DB: db},
 		users:         &postgres.UserModel{DB: db},
+		accounts:      &postgres.AccountModel{DB: db},
 		templateCache: templateCache,
 	}
 

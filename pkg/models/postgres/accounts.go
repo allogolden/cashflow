@@ -11,24 +11,20 @@ type AccountModel struct {
 	DB *sql.DB
 }
 
-func (m AccountModel) CreateAccount(name string, balance float32) (int, error) {
-	stmt := `INSERT INTO accounts (name, balance) VALUES (?, ?)`
-
-	result, err := m.DB.Exec(stmt, name, balance)
+func (m AccountModel) CreateAccount(name string, balance float64, user_id int64) (int, error) {
+	stmt := `INSERT INTO accounts (name, balance, user_id) VALUES ($1, $2, $3) RETURNING id`
+	var id int
+	err := m.DB.QueryRow(stmt, name, balance, user_id).Scan(&id)
 
 	if err != nil {
 		return 0, err
 	}
 
-	id, err := result.LastInsertId()
-	if err != nil {
-		return 0, err
-	}
 	return int(id), nil
 }
 
-func (m *AccountModel) GetAccount(id int) (*models.Account, error) {
-	stmt := `SELECT id, name, balance FROM accounts WHERE id = ?`
+func (m *AccountModel) GetAccount(id int64) (*models.Account, error) {
+	stmt := `SELECT id, name, balance FROM accounts WHERE id = $1`
 
 	row := m.DB.QueryRow(stmt, id)
 
@@ -45,9 +41,9 @@ func (m *AccountModel) GetAccount(id int) (*models.Account, error) {
 	return s, nil
 }
 
-func (m *AccountModel) GetUserAcccounts(user int) ([]*models.Account, error) {
+func (m *AccountModel) GetUserAcccounts(user int64) ([]*models.Account, error) {
 	stmt := `SELECT id, name, balance FROM accounts
-	WHERE user = ? ORDER BY created DESC LIMIT 10`
+	WHERE user = $1 ORDER BY created DESC LIMIT 10`
 
 	rows, err := m.DB.Query(stmt, user)
 	if err != nil {

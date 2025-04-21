@@ -40,11 +40,11 @@ type Category struct {
 type Account struct {
 	ID      int
 	Name    string
-	Balance float32
+	Balance float64
 }
 
 type Plan struct {
 	ID     int
 	name   string
-	amount float32
+	amount float64
 }

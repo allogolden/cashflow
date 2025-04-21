@@ -153,3 +153,46 @@ func (app *application) login(w http.ResponseWriter, r *http.Request) {
 		"user_id": id, // если вы из Login возвращаете id
 	})
 }
+
+func (app *application) createAccount(w http.ResponseWriter, r *http.Request) {
+	if app.accounts == nil {
+		log.Println("ERROR: app.models.Account is nil!")
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+	if app.accounts.DB == nil {
+		log.Println("ERROR: app.models.Account.DB is nil!")
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+	if r.Method != http.MethodPost {
+		w.Header().Set("Allow", http.MethodPost)
+
+		app.clientError(w, http.StatusMethodNotAllowed)
+	}
+
+	var id int
+
+	name := r.FormValue("name")
+	balance, err := strconv.ParseFloat(r.FormValue("balance"), 64)
+	user_id, err := strconv.ParseInt(r.FormValue("user_id"), 10, 32)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	id, err = app.accounts.CreateAccount(name, balance, user_id)
+
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"status":     "ok",
+		"message":    "Account created",
+		"account_id": id, // если вы из Login возвращаете id
+	})
+
+}
