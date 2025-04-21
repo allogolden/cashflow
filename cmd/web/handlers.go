@@ -174,7 +174,7 @@ func (app *application) createAccount(w http.ResponseWriter, r *http.Request) {
 	var id int
 
 	name := r.FormValue("name")
-	balance, err := strconv.ParseFloat(r.FormValue("balance"), 64)
+	balance, _ := strconv.ParseFloat(r.FormValue("balance"), 64)
 	user_id, err := strconv.ParseInt(r.FormValue("user_id"), 10, 32)
 	if err != nil {
 		app.serverError(w, err)
@@ -195,4 +195,71 @@ func (app *application) createAccount(w http.ResponseWriter, r *http.Request) {
 		"account_id": id, // если вы из Login возвращаете id
 	})
 
+}
+
+func (app *application) getAccount(w http.ResponseWriter, r *http.Request) {
+	if app.accounts == nil {
+		log.Println("ERROR: app.models.Account is nil!")
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+	if app.accounts.DB == nil {
+		log.Println("ERROR: app.models.Account.DB is nil!")
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	idStr := r.FormValue("id")
+	id, err := strconv.ParseInt(idStr, 10, 64)
+
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	var account *models.Account
+	account, err = app.accounts.GetAccount(id)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	if err := json.NewEncoder(w).Encode(account); err != nil {
+		app.serverError(w, err)
+	}
+}
+
+func (app *application) getUserAccounts(w http.ResponseWriter, r *http.Request) {
+	if app.accounts == nil {
+		log.Println("ERROR: app.models.Account is nil!")
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+	if app.accounts.DB == nil {
+		log.Println("ERROR: app.models.Account.DB is nil!")
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	var result []*models.Account
+
+	id, err := strconv.ParseInt(r.FormValue("user_id"), 10, 64)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	result, err = app.accounts.GetUserAcccounts(id)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	if err := json.NewEncoder(w).Encode(result); err != nil {
+		app.serverError(w, err)
+	}
 }

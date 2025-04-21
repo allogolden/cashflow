@@ -43,7 +43,7 @@ func (m *AccountModel) GetAccount(id int64) (*models.Account, error) {
 
 func (m *AccountModel) GetUserAcccounts(user int64) ([]*models.Account, error) {
 	stmt := `SELECT id, name, balance FROM accounts
-	WHERE user = $1 ORDER BY created DESC LIMIT 10`
+	WHERE user_id = $1 ORDER BY name DESC LIMIT 10`
 
 	rows, err := m.DB.Query(stmt, user)
 	if err != nil {
