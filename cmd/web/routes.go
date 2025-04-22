@@ -14,6 +14,7 @@ func (app *application) routes() *http.ServeMux {
 	mux.HandleFunc("/api/v1/accounts/create", app.createAccount)
 	mux.HandleFunc("/api/v1/accounts", app.getAccount)
 	mux.HandleFunc("/api/v1/user/accounts", app.getUserAccounts)
+	mux.HandleFunc("/api/v1/categories/create", app.createCategory)
 
 	fileServer := http.FileServer(http.Dir("./ui/static/"))
 	mux.Handle("/static/", http.StripPrefix("/static/", fileServer))

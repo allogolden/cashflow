@@ -11,24 +11,21 @@ type CategoryModel struct {
 	DB *sql.DB
 }
 
-func (m CategoryModel) CreateCateory(name string) (int, error) {
-	stmt := `INSERT INTO users (name) VALUES (?)`
+func (m CategoryModel) CreateCateory(name string, user int64) (int, error) {
+	stmt := `INSERT INTO categories (name, user_id) VALUES ($1, $2) RETURNING id`
 
-	result, err := m.DB.Exec(stmt, name)
+	var id int
+	err := m.DB.QueryRow(stmt, name, user).Scan(&id)
 
 	if err != nil {
 		return 0, err
 	}
 
-	id, err := result.LastInsertId()
-	if err != nil {
-		return 0, err
-	}
 	return int(id), nil
 }
 
 func (m *CategoryModel) GetCategory(id int) (*models.Category, error) {
-	stmt := `SELECT id, name FROM categories WHERE id = ?`
+	stmt := `SELECT id, name FROM categories WHERE id = $1`
 
 	row := m.DB.QueryRow(stmt, id)
 

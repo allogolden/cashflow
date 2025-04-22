@@ -263,3 +263,46 @@ func (app *application) getUserAccounts(w http.ResponseWriter, r *http.Request) 
 		app.serverError(w, err)
 	}
 }
+
+
+func (app *application) createCategory(w http.ResponseWriter, r *http.Request) {
+	if app.categories == nil {
+		log.Println("ERROR: app.models.Category is nil!")
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+	if app.categories.DB == nil {
+		log.Println("ERROR: app.models.Category.DB is nil!")
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+	if r.Method != http.MethodPost {
+		w.Header().Set("Allow", http.MethodPost)
+
+		app.clientError(w, http.StatusMethodNotAllowed)
+		return 
+	}
+
+	name := r.FormValue("name")
+	user_id, err := strconv.ParseInt(r.FormValue("user_id"), 10, 64)
+
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	result, error := app.categories.CreateCateory(name, user_id)
+	if error != nil {
+		app.serverError(w, error)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"status":     "ok",
+		"message":    "Account created",
+		"account_id": result, 
+	})
+
+}

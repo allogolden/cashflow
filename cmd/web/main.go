@@ -21,6 +21,7 @@ type application struct {
 	snippets      *mysql.SnippetModel
 	users         *postgres.UserModel
 	accounts      *postgres.AccountModel
+	categories    *postgres.CategoryModel
 	templateCache map[string]*template.Template
 }
 
@@ -54,6 +55,7 @@ func main() {
 		snippets:      &mysql.SnippetModel{DB: db},
 		users:         &postgres.UserModel{DB: db},
 		accounts:      &postgres.AccountModel{DB: db},
+		categories:    &postgres.CategoryModel{DB: db},
 		templateCache: templateCache,
 	}
 

@@ -33,8 +33,9 @@ type User struct {
 }
 
 type Category struct {
-	ID   int
-	Name string
+	ID   int `json:"id"`
+	Name string `json:"name"`
+	User_id int `json:"user_id"`
 }
 
 type Account struct {
